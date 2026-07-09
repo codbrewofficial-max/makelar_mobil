@@ -38,6 +38,8 @@ export const createCarSchema = z.object({
   location: z.string().min(1, "Lokasi wajib diisi").max(100),
   description: z.string().min(1, "Deskripsi wajib diisi"),
   inspectionReport: inspectionReportSchema.optional().nullable(),
+  // 🆕 Fitur Baru #1, addendum 09 Section 7.2 — dropdown "Kurator Pemeriksa"
+  inspectedById: z.string().uuid().optional().nullable(),
 });
 
 export const updateCarSchema = createCarSchema.partial();
@@ -57,6 +59,15 @@ export const listCarsQuerySchema = z.object({
   search: z.string().optional(),
 });
 
+// 🆕 Perbaikan Tambahan, addendum 09 Section 6 — GET /admin/cars sekarang dipaginasi
+export const listAdminCarsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+  status: z.enum(["DRAFT", "PUBLISHED", "SOLD", "ARCHIVED"]).optional(),
+  search: z.string().optional(),
+});
+
 export type CreateCarInput = z.infer<typeof createCarSchema>;
 export type UpdateCarInput = z.infer<typeof updateCarSchema>;
 export type ListCarsQuery = z.infer<typeof listCarsQuerySchema>;
+export type ListAdminCarsQuery = z.infer<typeof listAdminCarsQuerySchema>;

@@ -7,26 +7,12 @@ import axios from 'axios';
 
 // Get default from Vite's env standard, or Next public variable fallback
 const metaEnv = (import.meta as any).env || {};
-const DEFAULT_API_URL = 
-  metaEnv.VITE_API_BASE_URL || 
-  metaEnv.NEXT_PUBLIC_API_BASE_URL || 
+const DEFAULT_API_URL =
+  metaEnv.VITE_API_BASE_URL ||
+  metaEnv.NEXT_PUBLIC_API_BASE_URL ||
   'http://localhost:4000/api/v1';
 
-export function getApiMode(): 'mock' | 'live' {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('suhumobil_api_mode');
-    // If we're running in AI Studio sandbox, default to 'mock' first so it's instantly usable!
-    return (saved as 'mock' | 'live') || 'mock';
-  }
-  return 'mock';
-}
-
-export function setApiMode(mode: 'mock' | 'live') {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('suhumobil_api_mode', mode);
-    window.dispatchEvent(new Event('suhumobil_api_config_changed'));
-  }
-}
+// 🗑️ getApiMode / setApiMode DIHAPUS (Bug Fix #3, addendum 09 Section 5) — tidak ada lagi mode mock/sandbox.
 
 export function getApiUrl(): string {
   if (typeof window !== 'undefined') {

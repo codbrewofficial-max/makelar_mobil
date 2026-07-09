@@ -17,6 +17,10 @@ import settingsRoutes from "./modules/settings/settings.routes";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes";
 import curatorsRoutes from "./modules/curators/curators.routes";
 import trackingRoutes from "./modules/tracking/tracking.routes";
+import contentSectionsRoutes from "./modules/content-sections/content-sections.routes"; // 🆕
+import mediaRoutes from "./modules/media/media.routes"; // 🆕
+import auditLogsRoutes from "./modules/audit-logs/audit-logs.routes"; // 🆕
+import backupRoutes from "./modules/backup/backup.routes"; // 🆕
 
 const app = express();
 
@@ -44,6 +48,10 @@ app.use(API_PREFIX, settingsRoutes);
 app.use(API_PREFIX, dashboardRoutes);
 app.use(API_PREFIX, curatorsRoutes);
 app.use(API_PREFIX, trackingRoutes);
+app.use(API_PREFIX, contentSectionsRoutes); // 🆕
+app.use(API_PREFIX, mediaRoutes); // 🆕
+app.use(API_PREFIX, auditLogsRoutes); // 🆕
+app.use(API_PREFIX, backupRoutes); // 🆕
 
 app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
 

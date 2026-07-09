@@ -23,9 +23,11 @@ export async function getCarBySlug(req: Request, res: Response) {
   res.status(200).json(success(car));
 }
 
-export async function getAdminCars(_req: Request, res: Response) {
-  const cars = await listAdminCars();
-  res.status(200).json(success(cars));
+export async function getAdminCars(req: Request, res: Response) {
+  // 🆕 addendum 09 Section 6 — sekarang dipaginasi, baca dari validatedQuery
+  const query = (req as any).validatedQuery;
+  const { data, meta } = await listAdminCars(query);
+  res.status(200).json(success(data, "Success", meta));
 }
 
 export async function getAdminCarDetail(req: Request, res: Response) {

@@ -65,17 +65,28 @@ enum TrackingLogType {
   LEAD
 }
 
+// 🆕 Section 8, addendum 09
+enum MediaSourceType {
+  UPLOAD
+  EXTERNAL_LINK
+  AI_GENERATED
+}
+
 model User {
-  id           String    @id @default(uuid())
-  name         String    @db.VarChar(100)
-  email        String    @unique @db.VarChar(150)
-  passwordHash String    @map("password_hash") @db.VarChar(255)
-  role         UserRole  @default(ADMIN)
-  cars         Car[]
-  articles     Article[]
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-  deletedAt    DateTime? @map("deleted_at")
+  id              String           @id @default(uuid())
+  name            String           @db.VarChar(100)
+  email           String           @unique @db.VarChar(150)
+  passwordHash    String           @map("password_hash") @db.VarChar(255)
+  role            UserRole         @default(ADMIN)
+  tokenVersion    Int              @default(0) @map("token_version") // 🆕 dipakai backup.service.ts untuk invalidate sesi pasca-restore
+  cars            Car[]
+  articles        Article[]
+  contentSections ContentSection[] // 🆕
+  mediaAssets     MediaAsset[]     // 🆕
+  auditLogs       AuditLog[]       // 🆕
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  deletedAt       DateTime?        @map("deleted_at")
 
   @@map("users")
 }
@@ -98,6 +109,8 @@ model Car {
   status           CarStatus       @default(DRAFT)
   createdBy        String          @map("created_by")
   creator          User            @relation(fields: [createdBy], references: [id])
+  inspectedBy      String?         @map("inspected_by") // 🆕 Section 7.2, addendum 09
+  curator          Curator?        @relation(fields: [inspectedBy], references: [id], onDelete: SetNull) // 🆕
   images           CarImage[]
   leads            Lead[]
   trackingLogs     TrackingLog[]
@@ -128,23 +141,23 @@ model CarImage {
 }
 
 model Lead {
-  id          String       @id @default(uuid())
-  name        String       @db.VarChar(100)
-  email       String?      @db.VarChar(150)
-  phone       String       @db.VarChar(20)
-  city        String?      @db.VarChar(100)
-  budget      BigInt?
-  carInterest String?      @map("car_interest") @db.VarChar(150)
-  subject     LeadSubject?
-  message     String?
-  carId       String?      @map("car_id")
-  car         Car?         @relation(fields: [carId], references: [id])
-  source      LeadSource
-  status      LeadStatus   @default(NEW)
-  notes       String?
+  id           String        @id @default(uuid())
+  name         String        @db.VarChar(100)
+  email        String?       @db.VarChar(150)
+  phone        String        @db.VarChar(20)
+  city         String?       @db.VarChar(100)
+  budget       BigInt?
+  carInterest  String?       @map("car_interest") @db.VarChar(150)
+  subject      LeadSubject?
+  message      String?
+  carId        String?       @map("car_id")
+  car          Car?          @relation(fields: [carId], references: [id])
+  source       LeadSource
+  status       LeadStatus    @default(NEW)
+  notes        String?
   trackingLogs TrackingLog[]
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime     @updatedAt @map("updated_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
 
   @@index([status])
   @@index([carId])
@@ -185,13 +198,14 @@ model Article {
 }
 
 model Curator {
-  id          String   @id @default(uuid())
-  name        String   @db.VarChar(100)
-  role        String   @default("Kurator Utama") @db.VarChar(100)
-  photoUrl    String?  @map("photo_url") @db.VarChar(500)
-  description String
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(uuid())
+  name          String   @db.VarChar(100)
+  role          String   @default("Kurator Utama") @db.VarChar(100)
+  photoUrl      String?  @map("photo_url") @db.VarChar(500)
+  description   String
+  inspectedCars Car[]    // 🆕 Section 7.2, addendum 09
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("curators")
 }
@@ -212,4 +226,54 @@ model TrackingLog {
   @@index([carId])
   @@index([createdAt])
   @@map("tracking_logs")
+}
+
+// 🆕 Section 4, addendum 09 — generic CMS content blocks
+model ContentSection {
+  id         String   @id @default(uuid())
+  page       String   @db.VarChar(50)
+  sectionKey String   @map("section_key") @db.VarChar(50)
+  content    Json
+  updatedBy  String   @map("updated_by")
+  updater    User     @relation(fields: [updatedBy], references: [id])
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([page, sectionKey])
+  @@index([page])
+  @@map("content_sections")
+}
+
+// 🆕 Section 8, addendum 09 — Media Library
+model MediaAsset {
+  id         String          @id @default(uuid())
+  url        String          @db.VarChar(500)
+  sourceType MediaSourceType @map("source_type")
+  fileHash   String?         @map("file_hash") @db.VarChar(64)
+  sizeBytes  Int?            @map("size_bytes")
+  altText    String?         @map("alt_text") @db.VarChar(255)
+  uploadedBy String          @map("uploaded_by")
+  uploader   User            @relation(fields: [uploadedBy], references: [id])
+  createdAt  DateTime        @default(now()) @map("created_at")
+
+  @@index([sourceType])
+  @@map("media_assets")
+}
+
+// 🆕 Section 10, addendum 09 — Audit Log
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String   @db.VarChar(50)
+  entity    String   @db.VarChar(50)
+  entityId  String?  @map("entity_id")
+  metadata  Json?
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
+  @@map("audit_logs")
 }

@@ -28,6 +28,11 @@ export default function CuratorsList() {
   const [editingCurator, setEditingCurator] = useState<Curator | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  // 🆕 Bug Fix #1 (addendum 09): file foto yang menunggu diupload untuk kurator BARU
+  // (belum punya id sampai create sukses). Untuk kurator existing, upload langsung terjadi
+  // di handlePhotoUpload tanpa butuh state ini.
+  const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
+
   // Form Fields
   const [formData, setFormData] = useState({
     name: '',
@@ -54,6 +59,7 @@ export default function CuratorsList() {
 
   const handleOpenAdd = () => {
     setEditingCurator(null);
+    setPendingPhotoFile(null); // 🆕
     setFormData({
       name: '',
       role: 'Kurator Utama',
@@ -65,6 +71,7 @@ export default function CuratorsList() {
 
   const handleOpenEdit = (curator: Curator) => {
     setEditingCurator(curator);
+    setPendingPhotoFile(null); // 🆕
     setFormData({
       name: curator.name,
       role: curator.role || 'Kurator Utama',
@@ -89,16 +96,30 @@ export default function CuratorsList() {
     }
   };
 
+  // 🔧 FIXED (Bug Fix #1, addendum 09 Section 3): sebelumnya file di-convert ke base64 dan
+  // dititipkan di body JSON create/update — tidak pernah lewat endpoint upload/R2 yang sebenarnya.
+  // Sekarang: preview lokal pakai object URL, lalu upload sungguhan lewat curatorsService.uploadPhoto().
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      setFormData(prev => ({ ...prev, photoUrl: base64 }));
-    };
-    reader.readAsDataURL(file);
+    // Preview lokal saja - upload sungguhan terjadi di bawah.
+    setFormData(prev => ({ ...prev, photoUrl: URL.createObjectURL(file) }));
+
+    if (editingCurator) {
+      // Kurator existing: sudah punya id, langsung upload sekarang juga.
+      curatorsService.uploadPhoto(editingCurator.id, file)
+        .then(res => {
+          if (res.success) setFormData(prev => ({ ...prev, photoUrl: res.data.photoUrl || '' }));
+        })
+        .catch(err => {
+          console.error('Error uploading curator photo:', err);
+          alert('Gagal mengunggah foto kurator.');
+        });
+    } else {
+      // Kurator baru: belum ada id, upload ditunda sampai setelah create sukses (lihat handleSubmit).
+      setPendingPhotoFile(file);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -115,11 +136,11 @@ export default function CuratorsList() {
     setIsSaving(true);
     try {
       if (editingCurator) {
-        // Update
+        // Update — TIDAK lagi kirim photoUrl di body (foto sudah terupload langsung via handlePhotoUpload
+        // ke endpoint multipart yang benar, bukan dititipkan sebagai base64 di JSON ini).
         const res = await curatorsService.updateCurator(editingCurator.id, {
           name: formData.name,
           role: formData.role,
-          photoUrl: formData.photoUrl || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=500',
           description: formData.description
         });
         if (res.success) {
@@ -128,14 +149,19 @@ export default function CuratorsList() {
           fetchCurators();
         }
       } else {
-        // Create
+        // Create — photoUrl SELALU null saat create (sesuai kontrak backend, foto diupload terpisah).
         const res = await curatorsService.createCurator({
           name: formData.name,
           role: formData.role,
-          photoUrl: formData.photoUrl || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=500',
           description: formData.description
         });
         if (res.success) {
+          if (pendingPhotoFile) {
+            await curatorsService.uploadPhoto(res.data.id, pendingPhotoFile).catch(err =>
+              console.error('Error uploading photo for new curator:', err)
+            );
+            setPendingPhotoFile(null);
+          }
           alert('Kurator Utama baru berhasil ditambahkan!');
           setIsModalOpen(false);
           fetchCurators();
