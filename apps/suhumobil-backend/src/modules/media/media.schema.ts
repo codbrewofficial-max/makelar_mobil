@@ -1,9 +1,10 @@
 import { z } from "zod";
+import { optionalQuery } from "../../utils/zod-helpers";
 
 export const listMediaQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(24),
-  sourceType: z.enum(["UPLOAD", "EXTERNAL_LINK", "AI_GENERATED"]).optional(),
+  sourceType: optionalQuery(z.enum(["UPLOAD", "EXTERNAL_LINK", "AI_GENERATED"])),
 });
 
 export const createMediaLinkSchema = z.object({

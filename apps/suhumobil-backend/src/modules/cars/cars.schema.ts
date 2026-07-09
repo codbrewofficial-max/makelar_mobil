@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { optionalQuery } from "../../utils/zod-helpers";
 
 const currentYear = new Date().getFullYear();
 
@@ -38,7 +39,7 @@ export const createCarSchema = z.object({
   location: z.string().min(1, "Lokasi wajib diisi").max(100),
   description: z.string().min(1, "Deskripsi wajib diisi"),
   inspectionReport: inspectionReportSchema.optional().nullable(),
-  // 🆕 Fitur Baru #1, addendum 09 Section 7.2 — dropdown "Kurator Pemeriksa"
+  // Fitur Baru #1, addendum 09 Section 7.2 — dropdown "Kurator Pemeriksa"
   inspectedById: z.string().uuid().optional().nullable(),
 });
 
@@ -51,20 +52,22 @@ export const updateCarStatusSchema = z.object({
 export const listCarsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(12),
-  brand: z.string().optional(),
-  location: z.string().optional(),
-  minPrice: z.coerce.number().nonnegative().optional(),
-  maxPrice: z.coerce.number().nonnegative().optional(),
-  transmission: z.enum(["MANUAL", "AUTOMATIC", "CVT"]).optional(),
-  search: z.string().optional(),
+  brand: optionalQuery(z.string()),
+  location: optionalQuery(z.string()),
+  minPrice: optionalQuery(z.coerce.number().nonnegative()),
+  maxPrice: optionalQuery(z.coerce.number().nonnegative()),
+  transmission: optionalQuery(z.enum(["MANUAL", "AUTOMATIC", "CVT"])),
+  search: optionalQuery(z.string()),
 });
 
-// 🆕 Perbaikan Tambahan, addendum 09 Section 6 — GET /admin/cars sekarang dipaginasi
+// Perbaikan Tambahan, addendum 09 Section 6 — GET /admin/cars sekarang dipaginasi.
+// 🔧 FIX: status/search pakai optionalQuery() supaya ?status=&search= (kosong) dari
+// Postman/frontend tidak dianggap error validasi enum (root cause bug yang dilaporkan).
 export const listAdminCarsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
-  status: z.enum(["DRAFT", "PUBLISHED", "SOLD", "ARCHIVED"]).optional(),
-  search: z.string().optional(),
+  status: optionalQuery(z.enum(["DRAFT", "PUBLISHED", "SOLD", "ARCHIVED"])),
+  search: optionalQuery(z.string()),
 });
 
 export type CreateCarInput = z.infer<typeof createCarSchema>;
