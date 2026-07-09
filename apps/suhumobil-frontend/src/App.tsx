@@ -29,6 +29,10 @@ import BusinessProfilePage from './features/admin/BusinessProfilePage';
 import SettingsPage from './features/admin/SettingsPage';
 import CuratorsList from './features/admin/CuratorsList';
 import Insights from './features/admin/Insights';
+import ContentSectionsPage from './features/admin/ContentSectionsPage'; // 🆕 addendum 09
+import MediaLibraryPage from './features/admin/MediaLibraryPage'; // 🆕 addendum 09
+import BackupPage from './features/admin/BackupPage'; // 🆕 addendum 09
+import AuditLogsPage from './features/admin/AuditLogsPage'; // 🆕 addendum 09
 
 // Services
 import { trackingService } from './services/tracking.service';
@@ -41,7 +45,7 @@ function RouteTracker() {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const hashParams = new URLSearchParams(location.search);
-      
+
       const src = hashParams.get('src') || urlParams.get('src') ||
                   hashParams.get('utm_source') || urlParams.get('utm_source') ||
                   hashParams.get('ref') || urlParams.get('ref');
@@ -52,7 +56,7 @@ function RouteTracker() {
 
         const pathParts = location.pathname.split('/');
         const isCarDetail = pathParts[1] === 'cars' && pathParts[2];
-        
+
         if (isCarDetail) {
           const carSlug = pathParts[2];
           carsService.getCarBySlug(carSlug)
@@ -98,12 +102,12 @@ export default function App() {
 
         {/* SECURE ADMINISTRATIVE CHANNELS */}
         <Route path="/admin/login" element={<Login />} />
-        
+
         <Route path="/admin" element={<AdminLayout />}>
           {/* Default redirect to administrative overview */}
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
-          
+
           {/* Cars catalog management */}
           <Route path="cars" element={<CarsList />} />
           <Route path="cars/new" element={<CarFormPage />} />
@@ -122,6 +126,12 @@ export default function App() {
           <Route path="curators" element={<CuratorsList />} />
           <Route path="insights" element={<Insights />} />
           <Route path="settings" element={<SettingsPage />} />
+
+          {/* 🆕 addendum 09 — CMS, Media Library, Backup, Audit Log */}
+          <Route path="content" element={<ContentSectionsPage />} />
+          <Route path="media" element={<MediaLibraryPage />} />
+          <Route path="backup" element={<BackupPage />} />
+          <Route path="audit-logs" element={<AuditLogsPage />} />
         </Route>
 
         {/* Fallback to homepage */}

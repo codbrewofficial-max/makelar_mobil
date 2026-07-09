@@ -16,12 +16,15 @@ import {
   User,
   ShieldCheck,
   ChevronRight,
-  Database,
   ArrowUpRight,
-  TrendingUp
+  TrendingUp,
+  LayoutTemplate,
+  ImagePlus,
+  DatabaseBackup,
+  History
 } from 'lucide-react';
 import { useAuthStore } from '../../services/auth-store';
-import { getApiMode } from '../../services/api-client';
+// 🗑️ import { getApiMode } from '../../services/api-client'; DIHAPUS (Bug Fix #3, addendum 09) — sudah tidak ada mode mock.
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -61,12 +64,14 @@ export default function AdminLayout() {
     { label: 'Insights Sistem', icon: <TrendingUp size={18} />, path: '/admin/insights' },
     { label: 'Daftar Prospek (Leads)', icon: <Users2 size={18} />, path: '/admin/leads' },
     { label: 'Artikel & Edukasi', icon: <FileText size={18} />, path: '/admin/articles' },
+    { label: 'Konten Halaman', icon: <LayoutTemplate size={18} />, path: '/admin/content' }, // 🆕 addendum 09
+    { label: 'Media Library', icon: <ImagePlus size={18} />, path: '/admin/media' }, // 🆕 addendum 09
     { label: 'Profil Perusahaan', icon: <Briefcase size={18} />, path: '/admin/business-profile' },
     { label: 'Kurator Utama', icon: <ShieldCheck size={18} />, path: '/admin/curators' },
+    { label: 'Backup & Restore', icon: <DatabaseBackup size={18} />, path: '/admin/backup' }, // 🆕 addendum 09
+    { label: 'Log Aktivitas', icon: <History size={18} />, path: '/admin/audit-logs' }, // 🆕 addendum 09
     { label: 'Pengaturan Website', icon: <Settings size={18} />, path: '/admin/settings' }
   ];
-
-  const currentMode = getApiMode();
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
@@ -78,7 +83,7 @@ export default function AdminLayout() {
             <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center font-bold text-slate-950 text-base">S</div>
             <div>
               <h2 className="font-display font-bold text-sm tracking-tight">SuhuMobil Admin</h2>
-              <p className="text-[10px] text-slate-500 font-mono">Console Panel v1.4</p>
+              <p className="text-[10px] text-slate-500 font-mono">Console Panel v1.5</p>
             </div>
           </div>
 
@@ -115,16 +120,7 @@ export default function AdminLayout() {
 
         {/* Sidebar Footer */}
         <div className="p-4 border-t border-slate-900 space-y-3 bg-slate-950">
-          {/* Mode status block */}
-          <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-900 space-y-1">
-            <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Mode Server API</span>
-            <div className="flex items-center gap-1.5">
-              <Database size={12} className={currentMode === 'live' ? 'text-green-400' : 'text-amber-500'} />
-              <span className="text-[11px] font-semibold text-slate-300 capitalize">
-                {currentMode === 'live' ? 'Live API Backend' : 'Demo Sandbox (Mock)'}
-              </span>
-            </div>
-          </div>
+          {/* 🗑️ Blok "Mode Server API" DIHAPUS (Bug Fix #3, addendum 09) — sudah tidak ada mode mock/live toggle. */}
 
           {/* Logout button */}
           <button
