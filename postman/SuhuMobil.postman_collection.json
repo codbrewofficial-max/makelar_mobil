@@ -1,0 +1,1475 @@
+{
+  "info": {
+    "_postman_id": "8f2c1a10-0000-4000-8000-suhumobilapi01",
+    "name": "SuhuMobil Backend API",
+    "description": "Koleksi endpoint REST API SuhuMobil sesuai 04-api-contract.md. Autentikasi admin memakai JWT via HttpOnly Cookie (Postman otomatis menyimpan & mengirim cookie per domain, jadi cukup jalankan 'Auth > Login' sekali sebelum request 🔒 admin lainnya).\n\nBase URL diatur lewat environment variable {{baseUrl}}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (Admin/Owner)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login admin/owner. Cookie JWT HttpOnly otomatis di-set oleh backend dan disimpan oleh Postman cookie jar untuk domain baseUrl.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data) {",
+                  "  pm.environment.set('userId', json.data.id);",
+                  "  pm.environment.set('userRole', json.data.role);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Ambil data user yang sedang login (butuh cookie JWT valid). 🔒"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Hapus cookie JWT. 🔒"
+          },
+          "response": []
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "Cars (Public)",
+      "item": [
+        {
+          "name": "List Cars (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cars?page=1&limit=12&brand=&location=&minPrice=&maxPrice=&transmission=&search=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cars"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "12",
+                  "disabled": false
+                },
+                {
+                  "key": "brand",
+                  "value": "",
+                  "disabled": false
+                },
+                {
+                  "key": "location",
+                  "value": "",
+                  "disabled": false
+                },
+                {
+                  "key": "minPrice",
+                  "value": "",
+                  "disabled": false
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "",
+                  "disabled": false
+                },
+                {
+                  "key": "transmission",
+                  "value": "",
+                  "disabled": false
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "List mobil status PUBLISHED saja. Semua query param opsional."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Car Detail by Slug (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cars/{{carSlug}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cars",
+                "{{carSlug}}"
+              ]
+            },
+            "description": "Detail mobil PUBLISHED berdasarkan slug."
+          },
+          "response": []
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "Cars (Admin)",
+      "item": [
+        {
+          "name": "List Cars (Admin, semua status)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cars",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cars"
+              ]
+            },
+            "description": "🔒 List semua mobil termasuk DRAFT/SOLD/ARCHIVED."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Car Detail by ID (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cars/{{carId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cars",
+                "{{carId}}"
+              ]
+            },
+            "description": "🔒 Detail mobil apa pun statusnya."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Car",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cars",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cars"
+              ]
+            },
+            "description": "🔒 Tambah mobil baru, default status DRAFT. Slug digenerate otomatis.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Toyota Avanza 2019 G MT\",\n  \"brand\": \"Toyota\",\n  \"model\": \"Avanza\",\n  \"year\": 2019,\n  \"price\": 150000000,\n  \"mileage\": 45000,\n  \"transmission\": \"MANUAL\",\n  \"fuelType\": \"GASOLINE\",\n  \"color\": \"Silver\",\n  \"location\": \"Bandung\",\n  \"description\": \"<p>Kondisi terawat, servis rutin, siap pakai.</p>\",\n  \"inspectionReport\": {\n    \"mesin\": {\n      \"status\": \"good\",\n      \"note\": \"Normal, tidak ada rembesan oli\"\n    },\n    \"transmisi\": {\n      \"status\": \"good\",\n      \"note\": \"Perpindahan gigi halus\"\n    },\n    \"bodi\": {\n      \"status\": \"minor\",\n      \"note\": \"Baret halus di pintu kanan\"\n    },\n    \"interior\": {\n      \"status\": \"good\",\n      \"note\": \"Bersih, jok original\"\n    },\n    \"kakiKaki\": {\n      \"status\": \"good\",\n      \"note\": \"Ban 80%, tidak ada bunyi\"\n    },\n    \"kelistrikan\": {\n      \"status\": \"good\",\n      \"note\": \"AC dingin, semua fitur normal\"\n    },\n    \"catatanKhusus\": \"Servis rutin, kondisi terawat\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data) {",
+                  "  pm.environment.set('carId', json.data.id);",
+                  "  pm.environment.set('carSlug', json.data.slug);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Car",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cars/{{carId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cars",
+                "{{carId}}"
+              ]
+            },
+            "description": "🔒 Update field mobil (partial). Slug tidak berubah.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 145000000,\n  \"description\": \"<p>Update: harga nego tipis, kondisi mesin prima.</p>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Car Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cars/{{carId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cars",
+                "{{carId}}",
+                "status"
+              ]
+            },
+            "description": "🔒 Ubah status mobil. DRAFT->PUBLISHED butuh minimal 5 foto terupload.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PUBLISHED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Car (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cars/{{carId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cars",
+                "{{carId}}"
+              ]
+            },
+            "description": "🔒 Hapus seluruh gambar di R2 dulu, baru soft-delete row."
+          },
+          "response": []
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "Car Images (Admin)",
+      "item": [
+        {
+          "name": "Upload Car Image",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cars/{{carId}}/images",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cars",
+                "{{carId}}",
+                "images"
+              ]
+            },
+            "description": "🔒 Upload 1 gambar (multipart/form-data). JPG/PNG/WebP, max 5MB. Backend proses via Sharp (resize, convert WebP, compress) lalu simpan ke R2 + DB.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "isCover",
+                  "type": "text",
+                  "value": "false"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data) {",
+                  "  pm.environment.set('carImageId', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Set Cover Image",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cars/{{carId}}/images/{{carImageId}}/cover",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cars",
+                "{{carId}}",
+                "images",
+                "{{carImageId}}",
+                "cover"
+              ]
+            },
+            "description": "🔒 Set gambar tertentu sebagai cover (gambar lain otomatis jadi non-cover)."
+          },
+          "response": []
+        },
+        {
+          "name": "Reorder Car Images",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cars/{{carId}}/images/reorder",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cars",
+                "{{carId}}",
+                "images",
+                "reorder"
+              ]
+            },
+            "description": "🔒 Body berupa array mentah [{ imageId, sortOrder }, ...].",
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"imageId\": \"{{carImageId}}\",\n    \"sortOrder\": 0\n  }\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Car Image",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cars/{{carId}}/images/{{carImageId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cars",
+                "{{carId}}",
+                "images",
+                "{{carImageId}}"
+              ]
+            },
+            "description": "🔒 Hapus 1 gambar dari R2 + DB. Jika yang dihapus cover, tidak ada auto re-assign cover."
+          },
+          "response": []
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "Leads",
+      "item": [
+        {
+          "name": "Create Lead - Dream Car Form",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "leads"
+              ]
+            },
+            "description": "Public. Form 'Cari Mobil Impian'.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Budi Santoso\",\n  \"phone\": \"081234567890\",\n  \"city\": \"Bandung\",\n  \"budget\": 150000000,\n  \"carInterest\": \"SUV budget 150 juta\",\n  \"carId\": null,\n  \"source\": \"DREAM_CAR_FORM\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Lead - WhatsApp CTA (per mobil)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "leads"
+              ]
+            },
+            "description": "Public. Popup CTA WhatsApp di Card/Detail mobil.\n\nlandingSource (opsional): kanal referral yang membawa pengunjung ke halaman ini (dibaca dari sessionStorage frontend). Jika diisi, backend otomatis mencatat 1 TrackingLog(type: LEAD) terhubung ke lead ini - lihat 07-frontend-reconciliation-addendum.md Section 7.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Budi Santoso\",\n  \"email\": \"budi@email.com\",\n  \"phone\": \"081234567890\",\n  \"subject\": \"PRICE_INQUIRY\",\n  \"message\": \"Apakah harga masih bisa nego? Saya minat unit ini.\",\n  \"carId\": \"{{carId}}\",\n  \"source\": \"WHATSAPP_CTA\",\n  \"landingSource\": \"instagram\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data) {",
+                  "  pm.environment.set('leadId', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Lead - WhatsApp FAB (general)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "leads"
+              ]
+            },
+            "description": "Public. Floating Action Button WhatsApp, tidak terkait mobil spesifik.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Budi Santoso\",\n  \"email\": \"budi@email.com\",\n  \"phone\": \"081234567890\",\n  \"subject\": \"OTHER\",\n  \"message\": \"Halo, saya mau tanya-tanya soal mobil bekas.\",\n  \"carId\": null,\n  \"source\": \"WHATSAPP_FAB\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Lead - Contact Page",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "leads"
+              ]
+            },
+            "description": "Public. Form halaman Kontak.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Budi Santoso\",\n  \"phone\": \"081234567890\",\n  \"source\": \"CONTACT_PAGE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Leads (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/leads?page=1&limit=20&status=&source=&search=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "leads"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": false
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": false
+                },
+                {
+                  "key": "source",
+                  "value": "",
+                  "disabled": false
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "🔒 List semua lead dengan filter & pagination."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Lead Detail (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/leads/{{leadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "leads",
+                "{{leadId}}"
+              ]
+            },
+            "description": "🔒 Detail 1 lead."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Lead Status/Notes (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/leads/{{leadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "leads",
+                "{{leadId}}"
+              ]
+            },
+            "description": "🔒 Hanya status & notes yang bisa diubah. Tidak ada endpoint DELETE untuk lead.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONTACTED\",\n  \"notes\": \"Sudah dihubungi, akan survey Sabtu\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "Settings & Branding",
+      "item": [
+        {
+          "name": "Get Public Settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/settings/public",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings",
+                "public"
+              ]
+            },
+            "description": "Public. Whitelist key aman untuk publik (siteTitle, whatsappNumber, socialLinks, watermark, businessProfile subset, gtmId, ga4Id)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Settings (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "settings"
+              ]
+            },
+            "description": "🔒 Ambil semua key setting apa adanya."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Settings (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "settings"
+              ]
+            },
+            "description": "🔒 Update partial - kirim hanya key yang mau diubah. businessProfile.description disanitasi otomatis.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"watermark\": {\n    \"label\": \"Powered by SuhuMobil\",\n    \"link\": \"https://suhumobil.com\"\n  },\n  \"whatsappNumber\": \"6281234567890\",\n  \"socialLinks\": {\n    \"instagram\": \"https://instagram.com/suhumobil\",\n    \"tiktok\": \"\",\n    \"youtube\": \"\"\n  },\n  \"gtmId\": \"GTM-XXXXXXX\",\n  \"businessProfile\": {\n    \"name\": \"SuhuMobil\",\n    \"tagline\": \"Mobil Bekas Terkurasi & Terpercaya\",\n    \"description\": \"<p>Cerita 25 tahun pengalaman...</p>\",\n    \"address\": \"Bandung, Jawa Barat\",\n    \"phone\": \"6281234567890\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Business Profile Logo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/settings/branding/logo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "settings",
+                "branding",
+                "logo"
+              ]
+            },
+            "description": "🔒 Upload logo (multipart). Resize max 512x512, convert WebP, upload ke R2 folder branding/.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "Articles (Public)",
+      "item": [
+        {
+          "name": "List Articles (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/articles?page=1&limit=10&tag=&search=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "articles"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "disabled": false
+                },
+                {
+                  "key": "tag",
+                  "value": "",
+                  "disabled": false
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Public. List artikel status PUBLISHED."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Article Detail by Slug (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/articles/{{articleSlug}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "articles",
+                "{{articleSlug}}"
+              ]
+            },
+            "description": "Public. Detail artikel PUBLISHED."
+          },
+          "response": []
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "Articles (Admin)",
+      "item": [
+        {
+          "name": "List Articles (Admin, semua status)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/articles?page=1&limit=10&status=&search=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "articles"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "disabled": false
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": false
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "🔒 List semua artikel termasuk DRAFT."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Article Detail by ID (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/articles/{{articleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "articles",
+                "{{articleId}}"
+              ]
+            },
+            "description": "🔒 Detail artikel apa pun statusnya."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Article",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/articles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "articles"
+              ]
+            },
+            "description": "🔒 Buat artikel baru, default status DRAFT, coverImage null. Slug otomatis, content disanitasi & reading time dihitung otomatis.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"5 Tips Merawat Mesin Mobil Matic Biar Awet\",\n  \"excerpt\": \"Mobil matic butuh perawatan berbeda dari manual...\",\n  \"content\": \"<p>Isi artikel lengkap dalam HTML dari rich text editor...</p>\",\n  \"tags\": [\n    \"tips\",\n    \"perawatan-mobil\"\n  ],\n  \"seoTitle\": null,\n  \"seoDescription\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data) {",
+                  "  pm.environment.set('articleId', json.data.id);",
+                  "  pm.environment.set('articleSlug', json.data.slug);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Article",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/articles/{{articleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "articles",
+                "{{articleId}}"
+              ]
+            },
+            "description": "🔒 Update field artikel (partial). Slug tidak berubah.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"excerpt\": \"Update ringkas: 5 tips wajib biar mobil matic awet dan tahan lama.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Article Cover",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/articles/{{articleId}}/cover",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "articles",
+                "{{articleId}}",
+                "cover"
+              ]
+            },
+            "description": "🔒 Upload/ganti cover artikel (multipart). Wajib diisi sebelum status bisa PUBLISHED.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Article Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/articles/{{articleId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "articles",
+                "{{articleId}}",
+                "status"
+              ]
+            },
+            "description": "🔒 Ubah status Draft/Published. Butuh coverImage terisi untuk publish. publishedAt terisi otomatis saat pertama kali PUBLISHED.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PUBLISHED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Article (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/articles/{{articleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "articles",
+                "{{articleId}}"
+              ]
+            },
+            "description": "🔒 Hapus cover dari R2 dulu, baru soft-delete row."
+          },
+          "response": []
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "Dashboard (Admin)",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/dashboard/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "dashboard",
+                "stats"
+              ]
+            },
+            "description": "🔒 Ringkasan angka: total/published/sold cars, total/new leads, total/published articles, storage used/quota."
+          },
+          "response": []
+        }
+      ],
+      "description": ""
+    },
+    {
+      "name": "Curators",
+      "item": [
+        {
+          "name": "List Curators (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/curators?search=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "curators"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Public. List semua kurator (tidak dipaginasi, jumlahnya kecil). Query 'search' opsional."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Curator Detail (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/curators/{{curatorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "curators",
+                "{{curatorId}}"
+              ]
+            },
+            "description": "Public. Detail 1 kurator."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Curator",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/curators",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "curators"
+              ]
+            },
+            "description": "🔒 Tambah kurator baru. photoUrl otomatis null, upload foto di request terpisah.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Suhu Benny Susilo\",\n  \"role\": \"Kurator Utama\",\n  \"description\": \"Selama 25 tahun berkecimpung di dunia otomotif, memastikan setiap unit yang masuk showroom lolos inspeksi ketat.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data) {",
+                  "  pm.environment.set('curatorId', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Curator",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/curators/{{curatorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "curators",
+                "{{curatorId}}"
+              ]
+            },
+            "description": "🔒 Update field kurator (partial).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"Kurator Utama & Teknisi Senior\",\n  \"description\": \"Update bio singkat kurator.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Curator Photo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/curators/{{curatorId}}/photo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "curators",
+                "{{curatorId}}",
+                "photo"
+              ]
+            },
+            "description": "🔒 Upload/ganti foto kurator (multipart). Resize max 512x512, convert WebP, upload ke R2 folder curators/. Foto lama dihapus dulu dari R2 (no orphan file).",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Curator (Hard Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/curators/{{curatorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "curators",
+                "{{curatorId}}"
+              ]
+            },
+            "description": "🔒 Hard delete - hapus foto dari R2 dulu (jika ada), baru hapus row. Tidak ada soft delete untuk kurator."
+          },
+          "response": []
+        }
+      ],
+      "description": "Modul baru dari 07-frontend-reconciliation-addendum.md Section 5 / 08-instruksi-sinkronisasi-backend.md Section 2. Entitas konten publik (profil tim), BUKAN role login."
+    },
+    {
+      "name": "Tracking & Insights",
+      "item": [
+        {
+          "name": "Track Visit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tracking/visit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tracking",
+                "visit"
+              ]
+            },
+            "description": "Public. Dipanggil saat pengunjung membuka link ber-query ?src=/?utm_source=/?ref=. Rate limit khusus 30/menit/IP. carId opsional (kirim null jika tidak terkait mobil tertentu).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"carId\": \"{{carId}}\",\n  \"source\": \"instagram\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Track Click",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tracking/click",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tracking",
+                "click"
+              ]
+            },
+            "description": "Public. Dipanggil saat admin klik tombol 'Salin Tautan' di ShareLinkModal. Rate limit khusus 30/menit/IP.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"carId\": \"{{carId}}\",\n  \"source\": \"instagram\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get System Insights (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/insights/system",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "insights",
+                "system"
+              ]
+            },
+            "description": "🔒 Data agregat dashboard Insights: totalVisits/totalClicks/totalLeads, bySource (6 kanal standar + kanal lain), byCar (top 10), recentLogs (100 terakhir)."
+          },
+          "response": []
+        }
+      ],
+      "description": "Modul baru dari 07-frontend-reconciliation-addendum.md Section 6 / 08-instruksi-sinkronisasi-backend.md Section 3. Analitik referral link per kanal, terpisah dari GTM/GA4."
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000/api/v1",
+      "type": "string"
+    }
+  ]
+}

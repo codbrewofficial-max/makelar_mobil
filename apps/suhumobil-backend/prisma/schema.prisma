@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+}
+
+enum CarStatus {
+  DRAFT
+  PUBLISHED
+  SOLD
+  ARCHIVED
+}
+
+enum CarTransmission {
+  MANUAL
+  AUTOMATIC
+  CVT
+}
+
+enum CarFuelType {
+  GASOLINE
+  DIESEL
+  HYBRID
+  ELECTRIC
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  NEGOTIATION
+  CLOSED
+  REJECTED
+}
+
+enum LeadSource {
+  WHATSAPP_CTA
+  WHATSAPP_FAB
+  DREAM_CAR_FORM
+  CONTACT_PAGE
+}
+
+enum LeadSubject {
+  PRICE_INQUIRY
+  NEGOTIATION
+  SCHEDULE_SURVEY
+  OTHER
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum TrackingLogType {
+  VISIT
+  CLICK
+  LEAD
+}
+
+model User {
+  id           String    @id @default(uuid())
+  name         String    @db.VarChar(100)
+  email        String    @unique @db.VarChar(150)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  role         UserRole  @default(ADMIN)
+  cars         Car[]
+  articles     Article[]
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  @@map("users")
+}
+
+model Car {
+  id               String          @id @default(uuid())
+  slug             String          @unique @db.VarChar(180)
+  title            String          @db.VarChar(150)
+  brand            String          @db.VarChar(50)
+  model            String          @db.VarChar(50)
+  year             Int
+  price            BigInt
+  mileage          Int
+  transmission     CarTransmission
+  fuelType         CarFuelType     @map("fuel_type")
+  color            String?         @db.VarChar(30)
+  location         String          @db.VarChar(100)
+  description      String
+  inspectionReport Json?           @map("inspection_report")
+  status           CarStatus       @default(DRAFT)
+  createdBy        String          @map("created_by")
+  creator          User            @relation(fields: [createdBy], references: [id])
+  images           CarImage[]
+  leads            Lead[]
+  trackingLogs     TrackingLog[]
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+  deletedAt        DateTime?       @map("deleted_at")
+
+  @@index([status])
+  @@index([brand])
+  @@index([location])
+  @@map("cars")
+}
+
+model CarImage {
+  id        String   @id @default(uuid())
+  carId     String   @map("car_id")
+  car       Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
+  url       String   @db.VarChar(500)
+  fileHash  String   @map("file_hash") @db.VarChar(64)
+  sizeBytes Int      @map("size_bytes")
+  sortOrder Int      @default(0) @map("sort_order")
+  isCover   Boolean  @default(false) @map("is_cover")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([carId])
+  @@index([fileHash])
+  @@map("car_images")
+}
+
+model Lead {
+  id          String       @id @default(uuid())
+  name        String       @db.VarChar(100)
+  email       String?      @db.VarChar(150)
+  phone       String       @db.VarChar(20)
+  city        String?      @db.VarChar(100)
+  budget      BigInt?
+  carInterest String?      @map("car_interest") @db.VarChar(150)
+  subject     LeadSubject?
+  message     String?
+  carId       String?      @map("car_id")
+  car         Car?         @relation(fields: [carId], references: [id])
+  source      LeadSource
+  status      LeadStatus   @default(NEW)
+  notes       String?
+  trackingLogs TrackingLog[]
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([carId])
+  @@index([createdAt])
+  @@map("leads")
+}
+
+model Setting {
+  key       String   @id @db.VarChar(100)
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+model Article {
+  id                 String        @id @default(uuid())
+  slug               String        @unique @db.VarChar(200)
+  title              String        @db.VarChar(200)
+  excerpt            String        @db.VarChar(300)
+  content            String
+  coverImage         String?       @map("cover_image") @db.VarChar(500)
+  tags               String[]
+  readingTimeMinutes Int           @map("reading_time_minutes")
+  status             ArticleStatus @default(DRAFT)
+  seoTitle           String?       @map("seo_title") @db.VarChar(200)
+  seoDescription     String?       @map("seo_description") @db.VarChar(300)
+  authorId           String        @map("author_id")
+  author             User          @relation(fields: [authorId], references: [id])
+  publishedAt        DateTime?     @map("published_at")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+  deletedAt          DateTime?     @map("deleted_at")
+
+  @@index([status])
+  @@index([publishedAt])
+  @@map("articles")
+}
+
+model Curator {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(100)
+  role        String   @default("Kurator Utama") @db.VarChar(100)
+  photoUrl    String?  @map("photo_url") @db.VarChar(500)
+  description String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("curators")
+}
+
+model TrackingLog {
+  id        String          @id @default(uuid())
+  type      TrackingLogType
+  source    String          @db.VarChar(30)
+  carId     String?         @map("car_id")
+  car       Car?            @relation(fields: [carId], references: [id], onDelete: SetNull)
+  carTitle  String?         @map("car_title") @db.VarChar(150)
+  leadId    String?         @map("lead_id")
+  lead      Lead?           @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  @@index([type])
+  @@index([source])
+  @@index([carId])
+  @@index([createdAt])
+  @@map("tracking_logs")
+}
