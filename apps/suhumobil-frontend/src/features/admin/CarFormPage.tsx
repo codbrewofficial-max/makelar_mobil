@@ -25,6 +25,7 @@ import { carsService } from '../../services/cars.service';
 import { carImagesService } from '../../services/car-images.service';
 import { Car, CarTransmission, CarFuelType, CarStatus, InspectionReport } from '../../types';
 import RichTextEditor from '../../components/RichTextEditor';
+import CuratorSelect from '../../components/CuratorSelect'; // 🆕 addendum 09 Section 7.2
 import { formatRupiah } from '../../utils/format';
 
 const carSchema = z.object({
@@ -70,6 +71,10 @@ export default function CarFormPage() {
   // Structured Inspection report state
   const [inspection, setInspection] = useState(INITIAL_INSPECTION);
 
+  // 🆕 addendum 09 Section 7.2 — Kurator Pemeriksa resmi (dropdown, terhubung ke tabel curators,
+  // BEDA dari field bebas teks "Nama Kurator / Inspektur" di dalam inspectionReport JSON di bawah).
+  const [inspectedById, setInspectedById] = useState<string | null>(null);
+
   // Gallery images list
   const [images, setImages] = useState<any[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -106,7 +111,7 @@ export default function CarFormPage() {
           if (res.success && res.data) {
             setCar(res.data);
             setDescription(res.data.description || '');
-            
+
             // Map values to hook form
             setValue('title', res.data.title);
             setValue('brand', res.data.brand);
@@ -123,6 +128,9 @@ export default function CarFormPage() {
             if (res.data.inspectionReport) {
               setInspection(res.data.inspectionReport as any);
             }
+
+            // 🆕 Kurator Pemeriksa resmi (relasi curator, bukan dari inspectionReport JSON)
+            setInspectedById((res.data as any).curator?.id || null);
 
             // Images map
             if (res.data.images) {
@@ -145,7 +153,8 @@ export default function CarFormPage() {
       const payload = {
         ...values,
         description,
-        inspectionReport: inspection
+        inspectionReport: inspection,
+        inspectedById // 🆕 addendum 09 Section 7.2
       };
 
       if (isEdit && car) {
@@ -185,7 +194,6 @@ export default function CarFormPage() {
 
     setUploadingImage(true);
     try {
-      // In mock mode or live mode
       const isCover = images.length === 0;
       const res = await carImagesService.uploadImage(car.id, file, isCover);
       if (res.success) {
@@ -528,10 +536,13 @@ export default function CarFormPage() {
               {/* Special Remarks & Inspector Details */}
               <div className="p-4 border border-amber-100 bg-amber-50/20 rounded-xl space-y-4">
                 <h4 className="font-bold text-slate-900 text-sm">Kesimpulan & Profil Penilai</h4>
-                
+
+                {/* 🆕 addendum 09 Section 7.2 — Kurator Pemeriksa resmi, terhubung ke data CRUD Kurator */}
+                <CuratorSelect value={inspectedById} onChange={setInspectedById} label="Kurator Pemeriksa (Resmi, dari data Kurator Utama)" />
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold text-slate-700">Nama Kurator / Inspektur</label>
+                    <label className="text-xs font-semibold text-slate-700">Nama Kurator / Inspektur (teks bebas, untuk laporan)</label>
                     <input
                       type="text"
                       value={inspection.inspectedBy || ''}
@@ -634,7 +645,7 @@ export default function CarFormPage() {
                       {/* Thumbnail photo */}
                       <div className="relative flex-1 overflow-hidden bg-slate-900 flex items-center justify-center select-none">
                         <img src={img.url} alt="listing gallery" className="w-full h-full object-cover" />
-                        
+
                         {/* Badges overlay */}
                         <div className="absolute top-2 left-2 flex flex-col gap-1">
                           {img.isCover ? (
