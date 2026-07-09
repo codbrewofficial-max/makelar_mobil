@@ -188,21 +188,27 @@
       "name": "Cars (Admin)",
       "item": [
         {
-          "name": "List Cars (Admin, semua status)",
+          "name": "List Cars (Admin, semua status, paginated)",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/admin/cars",
+              "raw": "{{baseUrl}}/admin/cars?page=1&limit=20&status=&search=",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "admin",
                 "cars"
+              ],
+              "query": [
+                { "key": "page", "value": "1", "disabled": false },
+                { "key": "limit", "value": "20", "disabled": false },
+                { "key": "status", "value": "", "disabled": false, "description": "DRAFT | PUBLISHED | SOLD | ARCHIVED (opsional)" },
+                { "key": "search", "value": "", "disabled": false }
               ]
             },
-            "description": "🔒 List semua mobil termasuk DRAFT/SOLD/ARCHIVED."
+            "description": "🔒 [addendum 09] List semua mobil termasuk DRAFT/SOLD/ARCHIVED. Sekarang dipaginasi (dulu return semua sekaligus tanpa page/limit) — response menyertakan 'meta' (page/limit/total/totalPages), sama seperti endpoint public. Setiap item juga menyertakan object 'curator' jika inspectedBy terisi."
           },
           "response": []
         },
@@ -246,10 +252,10 @@
                 "cars"
               ]
             },
-            "description": "🔒 Tambah mobil baru, default status DRAFT. Slug digenerate otomatis.",
+            "description": "🔒 Tambah mobil baru, default status DRAFT. Slug digenerate otomatis. [addendum 09] Field 'inspectedById' (opsional, uuid dari /curators) menghubungkan mobil ke Kurator Pemeriksa resmi — jalankan 'Curators > Create Curator' dulu kalau {{curatorId}} masih kosong.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Toyota Avanza 2019 G MT\",\n  \"brand\": \"Toyota\",\n  \"model\": \"Avanza\",\n  \"year\": 2019,\n  \"price\": 150000000,\n  \"mileage\": 45000,\n  \"transmission\": \"MANUAL\",\n  \"fuelType\": \"GASOLINE\",\n  \"color\": \"Silver\",\n  \"location\": \"Bandung\",\n  \"description\": \"<p>Kondisi terawat, servis rutin, siap pakai.</p>\",\n  \"inspectionReport\": {\n    \"mesin\": {\n      \"status\": \"good\",\n      \"note\": \"Normal, tidak ada rembesan oli\"\n    },\n    \"transmisi\": {\n      \"status\": \"good\",\n      \"note\": \"Perpindahan gigi halus\"\n    },\n    \"bodi\": {\n      \"status\": \"minor\",\n      \"note\": \"Baret halus di pintu kanan\"\n    },\n    \"interior\": {\n      \"status\": \"good\",\n      \"note\": \"Bersih, jok original\"\n    },\n    \"kakiKaki\": {\n      \"status\": \"good\",\n      \"note\": \"Ban 80%, tidak ada bunyi\"\n    },\n    \"kelistrikan\": {\n      \"status\": \"good\",\n      \"note\": \"AC dingin, semua fitur normal\"\n    },\n    \"catatanKhusus\": \"Servis rutin, kondisi terawat\"\n  }\n}",
+              "raw": "{\n  \"title\": \"Toyota Avanza 2019 G MT\",\n  \"brand\": \"Toyota\",\n  \"model\": \"Avanza\",\n  \"year\": 2019,\n  \"price\": 150000000,\n  \"mileage\": 45000,\n  \"transmission\": \"MANUAL\",\n  \"fuelType\": \"GASOLINE\",\n  \"color\": \"Silver\",\n  \"location\": \"Bandung\",\n  \"description\": \"<p>Kondisi terawat, servis rutin, siap pakai.</p>\",\n  \"inspectedById\": \"{{curatorId}}\",\n  \"inspectionReport\": {\n    \"mesin\": {\n      \"status\": \"good\",\n      \"note\": \"Normal, tidak ada rembesan oli\"\n    },\n    \"transmisi\": {\n      \"status\": \"good\",\n      \"note\": \"Perpindahan gigi halus\"\n    },\n    \"bodi\": {\n      \"status\": \"minor\",\n      \"note\": \"Baret halus di pintu kanan\"\n    },\n    \"interior\": {\n      \"status\": \"good\",\n      \"note\": \"Bersih, jok original\"\n    },\n    \"kakiKaki\": {\n      \"status\": \"good\",\n      \"note\": \"Ban 80%, tidak ada bunyi\"\n    },\n    \"kelistrikan\": {\n      \"status\": \"good\",\n      \"note\": \"AC dingin, semua fitur normal\"\n    },\n    \"catatanKhusus\": \"Servis rutin, kondisi terawat\"\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1463,6 +1469,355 @@
         }
       ],
       "description": "Modul baru dari 07-frontend-reconciliation-addendum.md Section 6 / 08-instruksi-sinkronisasi-backend.md Section 3. Analitik referral link per kanal, terpisah dari GTM/GA4."
+    },
+    {
+      "name": "Content Sections (CMS)",
+      "description": "Modul baru dari 09-perbaikan-dan-fitur-tambahan.md Section 4. Generic key-value content blocks per page/sectionKey untuk edit konten Landing/About/Footer/Contact dari admin console.",
+      "item": [
+        {
+          "name": "Get Landing Page Content (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/content/landing",
+              "host": ["{{baseUrl}}"],
+              "path": ["content", "landing"]
+            },
+            "description": "Public. Ambil semua section untuk halaman landing (hero, trust, about_curator_summary, cta_footer). Kalau admin belum pernah edit, backend mengembalikan default value hardcode."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Landing Content",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/content/landing",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "content", "landing"]
+            },
+            "description": "🔒 Sama seperti versi public, dipakai halaman admin /admin/content untuk load form edit."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Section - Landing Hero",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/content/landing/hero",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "content", "landing", "hero"]
+            },
+            "description": "🔒 Upsert section 'hero' di halaman 'landing'. Body content divalidasi Zod schema khusus sectionKey ini (headline, subheadline, ctaLabel).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": {\n    \"headline\": \"Mobil Bekas Terkurasi & Terpercaya\",\n    \"subheadline\": \"Setiap unit diperiksa tenaga ahli berpengalaman 25 tahun sebelum sampai ke tangan Anda.\",\n    \"ctaLabel\": \"Lihat Katalog\"\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Section - Landing Trust",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/content/landing/trust",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "content", "landing", "trust"]
+            },
+            "description": "🔒 Upsert section 'trust' (3 poin kepercayaan) di halaman 'landing'.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": {\n    \"items\": [\n      { \"icon\": \"shield\", \"title\": \"Kurasi Mutlak\", \"description\": \"Setiap unit lolos inspeksi ketat.\" },\n      { \"icon\": \"eye\", \"title\": \"Transparansi\", \"description\": \"Laporan kondisi apa adanya.\" },\n      { \"icon\": \"message-circle\", \"title\": \"Konsultasi Personal\", \"description\": \"Tanya langsung via WhatsApp.\" }\n    ]\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin About Content",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/content/about",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "content", "about"]
+            },
+            "description": "🔒 Section untuk halaman About (story)."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Section - About Story",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/content/about/story",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "content", "about", "story"]
+            },
+            "description": "🔒 Field 'content' di sini adalah rich text (HTML), disanitasi sanitize-html sebelum disimpan.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": {\n    \"headline\": \"Tentang SuhuMobil\",\n    \"content\": \"<p>Cerita 25 tahun pengalaman kami di dunia otomotif.</p>\"\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Footer Content",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/content/footer",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "content", "footer"]
+            },
+            "description": "🔒 Section untuk footer (general: description, copyrightText)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Contact Content",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/content/contact",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "content", "contact"]
+            },
+            "description": "🔒 Section untuk halaman Kontak (intro: headline, description)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Media Library",
+      "description": "Modul baru dari 09-perbaikan-dan-fitur-tambahan.md Section 8. Media reusable untuk semua form upload gambar (upload manual / link custom). Generate AI belum aktif (coming soon).",
+      "item": [
+        {
+          "name": "List Media",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/media?page=1&limit=24&sourceType=",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "media"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "24" },
+                { "key": "sourceType", "value": "", "description": "UPLOAD | EXTERNAL_LINK | AI_GENERATED (opsional)" }
+              ]
+            },
+            "description": "🔒 List media, dipaginasi."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Media File",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/media/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "media", "upload"]
+            },
+            "description": "🔒 Multipart upload. Di tab Body > form-data, klik field 'file' lalu pilih gambar dari komputer. Diproses Sharp → WebP → R2, sama seperti upload gambar mobil.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": [] }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data) {",
+                  "  pm.environment.set('mediaId', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add Media Link Custom",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/media/link",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "media", "link"]
+            },
+            "description": "🔒 Simpan URL gambar eksternal (tidak lewat Sharp/R2, disimpan apa adanya).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://images.unsplash.com/photo-1503376780353-7e6692767b70\",\n  \"altText\": \"Contoh gambar dari link eksternal\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data) {",
+                  "  pm.environment.set('mediaId', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Media",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/media/{{mediaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "media", "{{mediaId}}"]
+            },
+            "description": "🔒 Hapus 1 media asset. Kalau sourceType UPLOAD, file di R2 ikut dihapus."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Backup & Restore",
+      "description": "Modul baru dari 09-perbaikan-dan-fitur-tambahan.md Section 9. 🔒👑 OWNER only. Restore bersifat DESTRUKTIF — hati-hati menjalankan di environment Production.",
+      "item": [
+        {
+          "name": "Export Backup",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/backup/export",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "backup", "export"]
+            },
+            "description": "🔒👑 OWNER only. Trigger pg_dump, upload ke R2, kembalikan signed download URL (berlaku 10 menit). Retention otomatis: simpan 7 backup terakhir."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data) {",
+                  "  pm.environment.set('backupKey', json.data.key);",
+                  "  console.log('Download URL:', json.data.downloadUrl);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Backup History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/backup/list",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "backup", "list"]
+            },
+            "description": "🔒👑 OWNER only. Riwayat backup tersimpan di R2 (key, ukuran, tanggal)."
+          },
+          "response": []
+        },
+        {
+          "name": "Restore Backup ⚠️ DESTRUCTIVE",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/backup/restore",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "backup", "restore"]
+            },
+            "description": "⚠️ 🔒👑 OWNER only. DESTRUKTIF — menimpa seluruh data saat ini dan me-logout semua user. Di tab Body > form-data: pilih file '.dump' di field 'file', dan isi field 'confirmationText' PERSIS 'SUHUMOBIL RESTORE' atau request akan ditolak 422. JANGAN jalankan sembarangan di environment Production.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": [] },
+                { "key": "confirmationText", "value": "SUHUMOBIL RESTORE", "type": "text" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Audit Logs",
+      "description": "Modul baru dari 09-perbaikan-dan-fitur-tambahan.md Section 10. 🔒👑 OWNER only. Riwayat semua aksi penting (create/update/delete/login/restore/export).",
+      "item": [
+        {
+          "name": "List Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/audit-logs?page=1&limit=20&action=&entity=&userId=&dateFrom=&dateTo=",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "audit-logs"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "action", "value": "", "description": "CREATE | UPDATE | DELETE | LOGIN | LOGIN_FAILED | LOGOUT | RESTORE | EXPORT (opsional)" },
+                { "key": "entity", "value": "", "description": "car | curator | article | settings | content_section | media_asset | database | auth (opsional)" },
+                { "key": "userId", "value": "" },
+                { "key": "dateFrom", "value": "", "description": "ISO date, opsional" },
+                { "key": "dateTo", "value": "", "description": "ISO date, opsional" }
+              ]
+            },
+            "description": "🔒👑 OWNER only. Semua filter opsional, bisa dikombinasikan."
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "variable": [
