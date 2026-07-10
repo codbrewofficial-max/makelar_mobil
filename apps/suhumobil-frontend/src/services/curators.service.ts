@@ -36,8 +36,11 @@ export const curatorsService = {
     const formData = new FormData();
     formData.append('file', file);
 
+    // 🔧 FIX: JANGAN hardcode 'multipart/form-data' (tidak ada boundary → request gagal
+    // diparse multer di backend). Set 'Content-Type': undefined supaya browser generate
+    // header lengkap dengan boundary-nya sendiri.
     const response = await apiClient.post(`/admin/curators/${id}/photo`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 'Content-Type': undefined }
     });
     return response.data;
   },

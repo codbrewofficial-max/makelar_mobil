@@ -54,10 +54,9 @@ export const articlesService = {
     const formData = new FormData();
     formData.append('file', file);
 
+    // 🔧 FIX: jangan hardcode 'multipart/form-data' (tidak ada boundary → gagal diparse backend).
     const response = await apiClient.post(`/admin/articles/${id}/cover`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+      headers: { 'Content-Type': undefined }
     });
     return response.data;
   },

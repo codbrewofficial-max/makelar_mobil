@@ -30,10 +30,9 @@ export const settingsService = {
     const formData = new FormData();
     formData.append('file', file);
 
+    // 🔧 FIX: sama seperti curatorsService.uploadPhoto — jangan hardcode 'multipart/form-data'.
     const response = await apiClient.post('/admin/settings/branding/logo', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+      headers: { 'Content-Type': undefined }
     });
     return response.data;
   }

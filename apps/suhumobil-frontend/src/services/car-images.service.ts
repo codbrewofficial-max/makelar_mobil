@@ -13,10 +13,9 @@ export const carImagesService = {
     formData.append('file', file);
     formData.append('isCover', String(isCover));
 
+    // 🔧 FIX: jangan hardcode 'multipart/form-data' (tidak ada boundary → gagal diparse backend).
     const response = await apiClient.post(`/admin/cars/${carId}/images`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+      headers: { 'Content-Type': undefined }
     });
     return response.data;
   },
