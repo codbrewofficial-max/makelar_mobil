@@ -24,17 +24,15 @@ function serializeCar(car: any) {
   };
 }
 
-function toCoverImage(car: any): string | null {
-  if (!car.images || car.images.length === 0) return null;
-  const cover = car.images.find((img: any) => img.isCover) ?? car.images[0];
-  return cover.url;
-}
-
 async function assertCuratorExists(inspectedById: string) {
   const curator = await prisma.curator.findUnique({ where: { id: inspectedById } });
   if (!curator) throw new AppError(404, "CURATOR_NOT_FOUND", "Kurator tidak ditemukan");
 }
 
+// 🔧 FIX: kembali ke kontrak asli — response menyertakan `images: CarImage[]` PENUH
+// (bukan cuma `coverImage` string tunggal). Frontend (Home.tsx, Catalog.tsx) melakukan
+// `car.images.find(img => img.isCover)` sendiri di sisi client — menghilangkan `images`
+// dari response ini menyebabkan "Cannot read properties of undefined (reading 'find')".
 export async function listPublicCars(query: ListCarsQuery) {
   const { page, limit, brand, location, minPrice, maxPrice, transmission, search } = query;
 
@@ -61,7 +59,7 @@ export async function listPublicCars(query: ListCarsQuery) {
   const [items, total] = await Promise.all([
     prisma.car.findMany({
       where,
-      include: { images: true },
+      include: { images: { orderBy: { sortOrder: "asc" } } },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * limit,
       take: limit,
@@ -69,28 +67,16 @@ export async function listPublicCars(query: ListCarsQuery) {
     prisma.car.count({ where }),
   ]);
 
-  const data = items.map((car) => ({
-    id: car.id,
-    slug: car.slug,
-    title: car.title,
-    brand: car.brand,
-    model: car.model,
-    year: car.year,
-    price: Number(car.price),
-    mileage: Number(car.mileage),
-    transmission: car.transmission,
-    location: car.location,
-    coverImage: toCoverImage(car),
-    status: car.status,
-  }));
-
-  return { data, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+  return {
+    data: items.map(serializeCar),
+    meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+  };
 }
 
 export async function getPublicCarBySlug(slug: string) {
   const car = await prisma.car.findFirst({
     where: { slug, status: "PUBLISHED", deletedAt: null },
-    include: { images: { orderBy: { sortOrder: "asc" } }, curator: true }, // 🆕 include curator
+    include: { images: { orderBy: { sortOrder: "asc" } }, curator: true },
   });
 
   if (!car) {
@@ -100,7 +86,6 @@ export async function getPublicCarBySlug(slug: string) {
   return serializeCar(car);
 }
 
-// 🆕 addendum 09 Section 6 — sekarang menerima query & mengembalikan { data, meta } terpaginasi
 export async function listAdminCars(query: ListAdminCarsQuery) {
   const { page, limit, status, search } = query;
   const where: any = { deletedAt: null };
@@ -133,7 +118,7 @@ export async function listAdminCars(query: ListAdminCarsQuery) {
 export async function getAdminCarById(id: string) {
   const car = await prisma.car.findFirst({
     where: { id, deletedAt: null },
-    include: { images: { orderBy: { sortOrder: "asc" } }, curator: true }, // 🆕 include curator
+    include: { images: { orderBy: { sortOrder: "asc" } }, curator: true },
   });
   if (!car) throw new AppError(404, "CAR_NOT_FOUND", "Mobil tidak ditemukan");
   return serializeCar(car);
@@ -141,7 +126,7 @@ export async function getAdminCarById(id: string) {
 
 export async function createCar(input: CreateCarInput, userId: string) {
   if (input.inspectedById) {
-    await assertCuratorExists(input.inspectedById); // 🆕
+    await assertCuratorExists(input.inspectedById);
   }
 
   const slug = await generateUniqueSlug(input.title, "car");
@@ -163,7 +148,7 @@ export async function createCar(input: CreateCarInput, userId: string) {
       inspectionReport: input.inspectionReport ?? undefined,
       status: "DRAFT",
       createdBy: userId,
-      inspectedBy: input.inspectedById ?? null, // 🆕
+      inspectedBy: input.inspectedById ?? null,
     },
     include: { images: true, curator: true },
   });
@@ -178,15 +163,14 @@ export async function updateCar(id: string, input: UpdateCarInput, userId: strin
   if (!existing) throw new AppError(404, "CAR_NOT_FOUND", "Mobil tidak ditemukan");
 
   if (input.inspectedById) {
-    await assertCuratorExists(input.inspectedById); // 🆕
+    await assertCuratorExists(input.inspectedById);
   }
 
   const data: any = { ...input };
-  delete data.inspectedById; // handled separately below (maps to inspectedBy relation column)
+  delete data.inspectedById;
   if (input.price !== undefined) data.price = BigInt(Math.round(input.price));
   if (input.description !== undefined) data.description = sanitizeRichText(input.description);
-  if (input.inspectedById !== undefined) data.inspectedBy = input.inspectedById; // 🆕
-  // Slug intentionally never changes on update (05-backend-prd.md section 9).
+  if (input.inspectedById !== undefined) data.inspectedBy = input.inspectedById;
 
   const car = await prisma.car.update({
     where: { id },
@@ -236,9 +220,6 @@ export async function deleteCar(id: string, userId: string) {
   });
   if (!car) throw new AppError(404, "CAR_NOT_FOUND", "Mobil tidak ditemukan");
 
-  // Delete all R2 objects FIRST. If any deletion fails, abort before soft-deleting
-  // the row, so we never end up with an orphaned DB state pointing at missing files
-  // nor a soft-deleted car whose images still linger in R2 unaccounted for.
   for (const image of car.images) {
     await deleteFromR2(image.url);
   }
