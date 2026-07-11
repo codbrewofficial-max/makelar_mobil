@@ -6,6 +6,12 @@
 import { apiClient } from './api-client';
 
 export const contentSectionsService = {
+  // Public Endpoint: get all sections for a page (dipakai halaman publik)
+  async getPublicContent(page: string): Promise<{ success: boolean; message: string; data: Record<string, any> }> {
+    const response = await apiClient.get(`/content/${page}`);
+    return response.data;
+  },
+
   // Admin Endpoint: get all sections for a page
   async getAdminContent(page: string): Promise<{ success: boolean; message: string; data: Record<string, any> }> {
     const response = await apiClient.get(`/admin/content/${page}`);

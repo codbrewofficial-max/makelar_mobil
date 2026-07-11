@@ -7,9 +7,17 @@ import React, { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Menu, X, ArrowUpRight, ShieldCheck, Phone, MapPin } from 'lucide-react';
 import { settingsService } from '../services/settings.service';
+import { contentSectionsService } from '../services/content-sections.service';
 import { BusinessProfile } from '../types';
 import Watermark from './Watermark';
 import WhatsappFAB from './WhatsappFAB';
+
+const DEFAULT_FOOTER_CONTENT = {
+  general: {
+    description: 'Platform mobil bekas terkurasi & terpercaya.',
+    copyrightText: `© ${new Date().getFullYear()} SuhuMobil. Hak cipta dilindungi undang-undang.`,
+  },
+};
 
 export default function PublicLayout() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,6 +26,7 @@ export default function PublicLayout() {
     name: 'SuhuMobil',
     tagline: 'Kondisi Jujur, Kurasi Maksimun, Transaksi Aman'
   });
+  const [footerContent, setFooterContent] = useState<typeof DEFAULT_FOOTER_CONTENT>(DEFAULT_FOOTER_CONTENT);
 
   useEffect(() => {
     settingsService.getPublicSettings()
@@ -27,6 +36,16 @@ export default function PublicLayout() {
         }
       })
       .catch(err => console.error('Error fetching layout business profile:', err));
+  }, []);
+
+  useEffect(() => {
+    contentSectionsService.getPublicContent('footer')
+      .then(res => {
+        if (res.success) {
+          setFooterContent(prev => ({ ...prev, ...res.data }));
+        }
+      })
+      .catch(err => console.error('Error fetching footer content:', err));
   }, []);
 
   // Close mobile navigation on route changes
@@ -39,7 +58,7 @@ export default function PublicLayout() {
       {/* HEADER NAVBAR */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm shrink-0">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          
+
           {/* Logo Brand */}
           <Link to="/" className="flex items-center gap-2 group select-none">
             {profile.logoUrl ? (
@@ -88,7 +107,7 @@ export default function PublicLayout() {
             <NavLink to="/articles" className={({ isActive }) => `block py-2.5 px-3 rounded-xl transition ${isActive ? 'text-amber-600 bg-amber-50/50 font-bold border-l-4 border-amber-500 pl-2' : 'text-slate-600 hover:text-amber-500'}`}>Tips Otomotif</NavLink>
             <NavLink to="/about" className={({ isActive }) => `block py-2.5 px-3 rounded-xl transition ${isActive ? 'text-amber-600 bg-amber-50/50 font-bold border-l-4 border-amber-500 pl-2' : 'text-slate-600 hover:text-amber-500'}`}>Tentang Kami</NavLink>
             <NavLink to="/contact" className={({ isActive }) => `block py-2.5 px-3 rounded-xl transition ${isActive ? 'text-amber-600 bg-amber-50/50 font-bold border-l-4 border-amber-500 pl-2' : 'text-slate-600 hover:text-amber-500'}`}>Hubungi Kami</NavLink>
-            
+
             <div className="border-t border-slate-100 pt-3 flex flex-col gap-2">
               <Link
                 to="/admin/login"
@@ -109,7 +128,7 @@ export default function PublicLayout() {
       {/* FOOTER */}
       <footer className="bg-slate-900 text-white pt-12 pb-8 border-t border-slate-850 shrink-0">
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-12 gap-8 mb-10">
-          
+
           {/* Col 1: Branding info */}
           <div className="md:col-span-5 space-y-4">
             <div className="flex items-center gap-2">
@@ -158,9 +177,9 @@ export default function PublicLayout() {
         {/* Footer bottom bar */}
         <div className="max-w-7xl mx-auto px-6 pt-6 border-t border-slate-850 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500">
           <div>
-            &copy; {new Date().getFullYear()} SuhuMobil. Hak cipta dilindungi undang-undang.
+            {footerContent.general.copyrightText}
           </div>
-          
+
           {/* Watermark in bottom footer */}
           <div className="flex items-center">
             <Watermark variant="footer" />

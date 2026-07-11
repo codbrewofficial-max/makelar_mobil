@@ -8,15 +8,50 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ShieldCheck, Eye, Compass, PhoneCall, ArrowRight, Star } from 'lucide-react';
 import { carsService } from '../../services/cars.service';
 import { curatorsService } from '../../services/curators.service';
+import { contentSectionsService } from '../../services/content-sections.service';
 import { Car, Curator } from '../../types';
 import { formatRupiah, formatMileage } from '../../utils/format';
 import Watermark from '../../components/Watermark';
+
+// Fallback default — dipakai kalau data CMS belum sempat termuat / API gagal
+// (defense in depth, sesuai 09-perbaikan-dan-fitur-tambahan.md Section 4)
+const DEFAULT_LANDING_CONTENT = {
+  hero: {
+    headline: 'Beli Mobil Bekas Tanpa Was-Was',
+    subheadline:
+      'Selamat datang di SuhuMobil. Setiap mobil melewati kurasi & inspeksi mendalam di 150+ titik secara independen oleh teknisi senior. Jaminan kondisi jujur, harga adil, dan kepuasan aman.',
+    ctaLabel: 'Jelajahi Katalog',
+  },
+  trust: {
+    items: [
+      { icon: 'shield', title: 'Kurasi Ahli 150+ Titik', description: 'Setiap mobil wajib lolos inspeksi 150+ titik mencakup mesin, transmisi, sasis, kaki-kaki, kelistrikan, serta bebas sanksi/banjir/tabrak besar.' },
+      { icon: 'eye', title: 'Kondisi Jujur & Transparan', description: 'Kami menyertakan rincian lengkap laporan inspeksi, foto asli tanpa rekayasa, dan deskripsi kekurangan minor apa adanya. Tidak ada rahasia.' },
+      { icon: 'message-circle', title: 'Konsultasi Personal', description: 'Dapatkan bimbingan gratis dari kurator kami sebelum survey untuk membantu Anda mencocokkan kriteria berkendara dan kesiapan anggaran.' },
+    ],
+  },
+  about_curator_summary: {
+    headline: 'Para Ahli & Inspektur Senior',
+    narrative: 'Teknisi berpengalaman tinggi yang menjamin transparansi kondisi setiap mobil bekas di showroom kami.',
+  },
+  cta_footer: {
+    headline: 'Cari Mobil Impian Belum Ketemu?',
+    ctaLabel: 'Gunakan Jasa Cari Mobil',
+  },
+};
+
+// Mapping string icon dari backend (CMS) ke komponen lucide-react
+const ICON_MAP: Record<string, React.ReactNode> = {
+  shield: <ShieldCheck size={24} />,
+  eye: <Eye size={24} />,
+  'message-circle': <Compass size={24} />,
+};
 
 export default function Home() {
   const navigate = useNavigate();
   const [featuredCars, setFeaturedCars] = useState<Car[]>([]);
   const [curators, setCurators] = useState<Curator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [content, setContent] = useState<typeof DEFAULT_LANDING_CONTENT>(DEFAULT_LANDING_CONTENT);
 
   useEffect(() => {
     Promise.all([
@@ -35,6 +70,16 @@ export default function Home() {
       .finally(() => setIsLoading(false));
   }, []);
 
+  useEffect(() => {
+    contentSectionsService.getPublicContent('landing')
+      .then(res => {
+        if (res.success) {
+          setContent(prev => ({ ...prev, ...res.data }));
+        }
+      })
+      .catch(err => console.error('Error fetching landing content:', err));
+  }, []);
+
   return (
     <div className="font-sans text-slate-800 bg-slate-50 min-h-screen">
       {/* 1. HERO SECTION */}
@@ -46,18 +91,17 @@ export default function Home() {
               <Star size={12} className="fill-amber-400" /> Kurasi Ahli Pengalaman 25 Tahun
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold tracking-tight leading-tight">
-              Beli Mobil Bekas <br className="hidden sm:inline" />
-              <span className="text-amber-500">Tanpa Was-Was</span>
+              {content.hero.headline}
             </h1>
             <p className="text-slate-300 text-base sm:text-lg max-w-xl font-light leading-relaxed">
-              Selamat datang di <span className="font-semibold text-white">SuhuMobil</span>. Setiap mobil melewati kurasi & inspeksi mendalam di 150+ titik secara independen oleh teknisi senior. Jaminan kondisi jujur, harga adil, dan kepuasan aman.
+              {content.hero.subheadline}
             </p>
             <div className="flex flex-wrap gap-4 pt-2">
               <Link
                 to="/cars"
                 className="px-6 py-3 bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-semibold rounded-xl shadow-lg transition duration-150 flex items-center gap-2"
               >
-                Jelajahi Katalog <ArrowRight size={16} />
+                {content.hero.ctaLabel} <ArrowRight size={16} />
               </Link>
               <Link
                 to="/about"
@@ -85,36 +129,17 @@ export default function Home() {
           <p className="text-slate-500 text-sm">Menghilangkan kekhawatiran terbesar Anda saat bertransaksi mobil bekas dengan tiga pilar utama kami.</p>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
-          {/* Card 1 */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 hover:shadow-md transition">
-            <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
-              <ShieldCheck size={24} />
+          {content.trust.items.map((item, idx) => (
+            <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 hover:shadow-md transition">
+              <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
+                {ICON_MAP[item.icon] ?? <ShieldCheck size={24} />}
+              </div>
+              <h3 className="text-lg font-display font-bold text-slate-900">{item.title}</h3>
+              <p className="text-slate-600 text-sm leading-relaxed font-sans">
+                {item.description}
+              </p>
             </div>
-            <h3 className="text-lg font-display font-bold text-slate-900">Kurasi Ahli 150+ Titik</h3>
-            <p className="text-slate-600 text-sm leading-relaxed font-sans">
-              Setiap mobil wajib lolos inspeksi 150+ titik mencakup mesin, transmisi, sasis, kaki-kaki, kelistrikan, serta bebas sanksi/banjir/tabrak besar.
-            </p>
-          </div>
-          {/* Card 2 */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 hover:shadow-md transition">
-            <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
-              <Eye size={24} />
-            </div>
-            <h3 className="text-lg font-display font-bold text-slate-900">Kondisi Jujur & Transparan</h3>
-            <p className="text-slate-600 text-sm leading-relaxed font-sans">
-              Kami menyertakan rincian lengkap laporan inspeksi, foto asli tanpa rekayasa, dan deskripsi kekurangan minor apa adanya. Tidak ada rahasia.
-            </p>
-          </div>
-          {/* Card 3 */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 hover:shadow-md transition">
-            <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
-              <Compass size={24} />
-            </div>
-            <h3 className="text-lg font-display font-bold text-slate-900">Konsultasi Personal</h3>
-            <p className="text-slate-600 text-sm leading-relaxed font-sans">
-              Dapatkan bimbingan gratis dari kurator kami sebelum survey untuk membantu Anda mencocokkan kriteria berkendara dan kesiapan anggaran.
-            </p>
-          </div>
+          ))}
         </div>
       </section>
 
@@ -212,8 +237,8 @@ export default function Home() {
         <section className="py-20 max-w-7xl mx-auto px-6 space-y-20 border-t border-slate-200/50 mt-12">
           <div className="text-center max-w-2xl mx-auto space-y-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-amber-600">Mengenal Kurator Utama Kami</span>
-            <h2 className="text-3xl font-display font-bold text-slate-900">Para Ahli & Inspektur Senior</h2>
-            <p className="text-slate-500 text-sm">Teknisi berpengalaman tinggi yang menjamin transparansi kondisi setiap mobil bekas di showroom kami.</p>
+            <h2 className="text-3xl font-display font-bold text-slate-900">{content.about_curator_summary.headline}</h2>
+            <p className="text-slate-500 text-sm">{content.about_curator_summary.narrative}</p>
           </div>
 
           <div className="space-y-24">
@@ -259,7 +284,7 @@ export default function Home() {
       {/* 5. SELLER CTA / BOTTOM HERO */}
       <section className="bg-amber-500 py-16 text-slate-950">
         <div className="max-w-5xl mx-auto px-6 text-center space-y-6">
-          <h2 className="text-3xl font-display font-bold">Cari Mobil Impian Belum Ketemu?</h2>
+          <h2 className="text-3xl font-display font-bold">{content.cta_footer.headline}</h2>
           <p className="text-slate-900 text-base max-w-xl mx-auto font-light leading-relaxed">
             Biarkan tim SuhuMobil mencarikan unit terbaik sesuai kriteria, preferensi transmisi, dan anggaran belanja Anda tanpa repot. Kami bantu inspeksi mendalam sebelum Anda membayar.
           </p>
@@ -268,7 +293,7 @@ export default function Home() {
               to="/contact"
               className="px-6 py-3 bg-slate-950 hover:bg-slate-850 text-white font-semibold rounded-xl shadow-lg transition duration-150"
             >
-              Gunakan Jasa Cari Mobil
+              {content.cta_footer.ctaLabel}
             </Link>
           </div>
         </div>

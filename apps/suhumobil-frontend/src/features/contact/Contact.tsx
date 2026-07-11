@@ -3,14 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Mail, Phone, MapPin, Send, CheckCircle } from 'lucide-react';
 import { LeadSource } from '../../types';
 import { leadsService } from '../../services/leads.service';
+import { contentSectionsService } from '../../services/content-sections.service';
 import { formatRupiah } from '../../utils/format';
+
+const DEFAULT_CONTACT_CONTENT = {
+  intro: {
+    headline: 'Hubungi Kami',
+    description: 'Tim SuhuMobil siap melayani tanya jawab, bimbingan kredit sehat, hingga jasa penjemputan unit untuk kebutuhan titip jual Anda.',
+  },
+};
 
 const dreamCarSchema = z.object({
   name: z.string().min(2, 'Nama minimal terdiri dari 2 karakter'),
@@ -29,6 +37,17 @@ type DreamCarValues = z.infer<typeof dreamCarSchema>;
 export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState(false);
+  const [content, setContent] = useState<typeof DEFAULT_CONTACT_CONTENT>(DEFAULT_CONTACT_CONTENT);
+
+  useEffect(() => {
+    contentSectionsService.getPublicContent('contact')
+      .then(res => {
+        if (res.success) {
+          setContent(prev => ({ ...prev, ...res.data }));
+        }
+      })
+      .catch(err => console.error('Error fetching contact content:', err));
+  }, []);
 
   const {
     register,
@@ -75,10 +94,10 @@ export default function Contact() {
         {/* LEFT COLUMN: Contact Details & Office */}
         <div className="md:col-span-5 space-y-8">
           <div className="space-y-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-amber-600">Hubungi Kami</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-amber-600">{content.intro.headline}</span>
             <h1 className="text-3xl sm:text-4xl font-display font-bold text-slate-900 leading-tight">Mulai Konsultasi Anda Hari Ini</h1>
             <p className="text-slate-500 text-sm leading-relaxed">
-              Tim SuhuMobil siap melayani tanya jawab, bimbingan kredit sehat, hingga jasa penjemputan unit untuk kebutuhan titip jual Anda.
+              {content.intro.description}
             </p>
           </div>
 

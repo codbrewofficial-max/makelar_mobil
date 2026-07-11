@@ -47,9 +47,9 @@ export default function ShareLinkModal({
   if (!isOpen) return null;
 
   // Determine base public URL
-  // e.g. http://localhost:3000/#/cars/toyota-avanza-2019-g-mt
+  // e.g. http://localhost:3000/cars/toyota-avanza-2019-g-mt
   const baseOrigin = window.location.origin + window.location.pathname;
-  const trackingUrl = `${baseOrigin}#/cars/${carSlug}?src=${selectedSource}`;
+  const trackingUrl = `${baseOrigin}/cars/${carSlug}?src=${selectedSource}`;
 
   const handleCopy = async () => {
     try {

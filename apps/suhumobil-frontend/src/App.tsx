@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 // Public Layout & Views
 import PublicLayout from './components/PublicLayout';
@@ -86,7 +86,7 @@ function RouteTracker() {
 
 export default function App() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <RouteTracker />
       <Routes>
         {/* PUBLIC WEBPAGE INTERFACES */}
@@ -137,6 +137,6 @@ export default function App() {
         {/* Fallback to homepage */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
   );
 }

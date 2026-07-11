@@ -157,7 +157,7 @@ export default function AdminLayout() {
 
           {/* Quick links to public website */}
           <a
-            href="#/"
+            href="/"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 hover:border-slate-300 rounded-xl text-slate-600 hover:text-slate-800 text-xs font-semibold bg-white transition shadow-sm"
